@@ -38,8 +38,78 @@ class Producto:
         return self._precio_unitario
     
     def __str__(self):
-        return f"Producto: {self.descripcion} (${self.precio_unitario:.2f})"
+        return f"Producto: {self.descripcion} (${self.precio_unitario:.2f})" #.2f formateo el valor del FLOAT mostrando el numero con solo 2 decimales, para ser mas precisos y redondear el numero
     
+  
+"""   
 pr1 = Producto("0002", "Iphone 16 Pro Max", 1250)
-
 print(pr1)
+"""
+
+class ItemFacutra:
+    """
+    Representa una linea de un articulo en una factura.
+    Aplica Encapsulamiento: El subtotal se calcula internamente y no se puede modificar directamente
+    """
+
+    def __init__(self, producto: Producto, cantidad: int):
+        if not isinstance(producto, Producto):
+            raise TypeError("El 'producto' debe ser una instacia de la clase Producto.")
+        if cantidad <= 0:
+            raise ValueError("la cantidad debe ser mayor que cero(0).")
+        
+        self.producto = producto
+        self.cantidad = cantidad
+
+    @property #getter para subtotal
+    def subtotal(self):
+        return self._subtotal
+    
+    def __str__(self):
+        return (f"Item: {self.producto.descripcion} x {self.cantidad} "
+                f"(@${self.precio.unitario:.2f} c/u) = ${self.subtotal:.2f}")
+
+
+class Factura:
+    """
+    Representa una factura completa, agrupando clientes e items.
+    Aplica Encapsulamiento: El total se calcula y actualiza internamente.
+    """
+
+    def __init__(self, id_factura : str, cliente: Cliente, fecha: str):
+        if not isinstance(cliente, Cliente):
+            raise ValueError("El 'Cliente' debe ser una instacia de la clase Cliente")
+    
+        self.id_factura = id_factura
+        self.cliente = cliente
+        self.fehca = fecha
+        self._items = []
+        self.total = 0.0
+
+        def agregar_item(self, item: ItemFacutra):
+            #Añade un item a la factura y actualiza el total.
+            if not isinstance(item, ItemFacutra):
+                raise ValueError("El 'item' no es un instacia de la clase ItemFactura.")
+            self._items.append(item)
+            self._calcular_total() #actualiza el total-.
+
+            def _calcular_total(self):
+                #metodo privado para recalcular el total de la factura
+                self._total = sum(item.subtotal for item in self._items)
+
+            @property #crea un getter de items
+            def items(self):
+                return self._items #devuelve una copia para evitar modificacion externa directa
+            
+            @property #getter para total
+            def total(self):
+                return self._total
+            
+            def __str__(self):
+                items_str = "\n".join(str(item) for item in self._items)
+                return (f"Factura ID:{self.id_factura}\n"
+                        f"Cliente: {self.cliente.nombre}\n"
+                        f"Fecha: {self.fehca}\n"
+                        f"Items:\n {items_str}\n"
+                        f"Total: {self.total:.2f}")
+
