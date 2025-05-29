@@ -7,6 +7,7 @@ def crear_datos_ejemplo():
     """
     Crea datos de ejemplo para generar una factura y un informe de ventas.
     """
+    print("DEBUG: Creando datos de ejemplo...")
     cliente1 = Cliente("C001", "Juan Cruz", "Calle falsa 123, Claypole", "juano@gmail.com")
     cliente2 = Cliente("C002", "Leandro Herrera", "Avenida Siempre Viva 456","Alejandro Korn", "Leandro@gmail.com")
 
@@ -40,14 +41,19 @@ def crear_datos_ejemplo():
         producto5.descripcion: 1250.00 * 1 #1 unidad vendida
     }
 
+    print("DEBUG: Datos de ejemplo creados.")
     return factura1, factura2, datos_ventas
 
 def main():
+    print("DEBUG: Iniciando función main()...")
     #Asegurarse de que la carpeta de salida exista
     output_dir = "generated_pdfs"
+    print(f"DEBUG: Intentando crear directorio: {os.path.abspath(output_dir)}")
     os.makedirs(output_dir, exist_ok = True)
+    print(f"DEBUG: Directorio '{output_dir}' asegurado.")
 
     print("Generando datos de ejemplo...")
+
     factura1, factura2, datos_ventas = crear_datos_ejemplo()
     
     print("\nIniciando generación de PDFs...")
