@@ -71,7 +71,7 @@ class DocumentoPDF:
         table = Table(data, colWidths=[3*inch, 0.8*inch, 1*inch, 1*inch])
         table.setStyle(table_style)
         self.story.append(table)
-        self.story.append(Space(1,0.5 * inch))
+        self.story.append(Spacer(1,0.5 * inch))
         self.story.append(paragraph("Gracias por su compra!", self.styles['Normal']))
 
 class InformeVentaPDF(DocumentoPDF):
