@@ -61,5 +61,71 @@ class DocumentoPDF:
             ('ALING', (0, 0), (-1, -1), 'LEFT'),
             ('FONTNAME', (0, 0), (-1 ,0), 'Helvetica-Bold'),
             ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
-            ('BACKGROUND', (0, 1) )
+            ('BACKGROUND', (0, 1), (-1, -2), colors.white),
+            ('GRID', (0, 0) (-1, -1), 1, colors.grey),
+            ('ALIGN', (0, 0), (-1, -1),'RIGHT'), #alinea los numeros a la derecha
+            ('FONTNAME', (2, -1), (-1, -1), 'Helvetica-Bold'), #Total en negrita
+            ('BACKGROUND', (0, -1), (-1, -1), colors.HexColor('E0E0E0')), #fondo para la fila del total
         ])
+
+        table = Table(data, colWidths=[3*inch, 0.8*inch, 1*inch, 1*inch])
+        table.setStyle(table_style)
+        self.story.append(table)
+        self.story.append(Space(1,0.5 * inch))
+        self.story.append(paragraph("Gracias por su compra!", self.styles['Normal']))
+
+class InformeVentaPDF(DocumentoPDF):
+    """
+    Generador de documentos PDF para informes de ventas con graficos.
+    Hereda de DocumentoPDF.
+    Aplica Polimorfismo: Implementa _build_content de forma especifica para informes de ventas
+    """
+
+    def __int__(self, filename: str, data: dict, title: str = "Informe de Ventas"):
+        super().__init__(filename, title)
+        self.data = data #datos para el informe, ej: {'Producto A: 150, 'Producto B': 200} 
+
+    def _build_content(self):
+        self.story.append(paragraph("Resumen de Ventas por Producto", self.styles['h3']))
+        self.story.append(Spacer(1, 0.2 * inch))
+
+        #crear tabla de resumen
+        table_data = [['Producto', 'Ventas']]
+        for producto, ventas in self.data.items():
+            table_data.append([producto, f"${ventas:.2f}"])
+
+        table_style = TableStyle([
+            ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#D3D3D3')),
+            ('TEXTCOLOR',(0, 0), (-1, 0), colors.black),
+            ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+            ('BOTTOMPADDINGD', (0, 0), (-1, 0), 8),
+            ('GRID', (0, 0 ), (-1, -1), 1, colors.grey),
+            ('ALIGN', (1, 0), (-1, -1), 'RIGHT'), #alinea ventas a la derecha
+        ])
+
+        ventas_table = Table(table_data, colWidths=[2.5*inch, 1.5*inch])
+        ventas_table.setStyle(table_style)
+        self.story.append(ventas_table)
+        self.story.append(Spacer(1,0.5 * inch))
+
+        #crear grafico de barras simple
+        drawing = Drawing(400, 200) #Ancho y alto del dibujo
+        chart = VerticalBarChart()
+        chart.x = 50
+        chart.y = 50
+        chart.height = 125
+        chart.width = 300
+        chart.data = [tuple(self.data.values())] #los datos deber ser una lista de tuplas
+        chart.groupSpacing = 10
+        chart.valueAxis.valueMin = 0
+        chart.ValueAxis.valueMax = max(self.data.values()) * 1.2 #un poco mas arriba que el maximo
+        chart.categoryAxis.labels.boxAnchor = 'ne' #centra las etiquetas en el eje x
+        chart.categoryAxis.labels.dx = 8 #desplaza las etiquetas a la derecha
+        chart.categoryAxis.labels.dy = -2
+        chart.categoryAxis.categoryNames = list(self.data.keys()) #nombres de las categorias
+
+        drawing.add(chart)
+        self.story.append(drawing)
+        self.story.append(Spacer(1, 0.6 * inch))
+        self.story.append(paragraph("Este grafico muestra las venta acumuladas por producto.", self.styles['Italic']))
