@@ -1,5 +1,5 @@
-from src.Models import Cliente, Producto, ItemFacutra, Factura
-from src.Documents import FacturaPDF, InformeVentaPDF
+from src.models import Cliente, Producto, ItemFactura, Factura
+from src.documents import FacturaPDF, InformeVentaPDF
 import os
 from datetime import datetime
 
@@ -25,8 +25,8 @@ def crear_datos_ejemplo():
 
     # --- Crear Factura 2 ---
     factura2 = Factura("F002", cliente2, datetime.now().strftime("%Y-%m-%d"))
-    factura2.agregar_item(ItemFacutra(producto2, 2))
-    factura2.agregar_item(ItemFacutra(producto4, 1))
+    factura2.agregar_item(ItemFactura(producto2, 2))
+    factura2.agregar_item(ItemFactura(producto4, 1))
     print(factura2) #Para ver la representación de la factura en consola
     print("-" * 30)
 

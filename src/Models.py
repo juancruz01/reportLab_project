@@ -46,7 +46,7 @@ pr1 = Producto("0002", "Iphone 16 Pro Max", 1250)
 print(pr1)
 """
 
-class ItemFacutra:
+class ItemFactura:
     """
     Representa una linea de un articulo en una factura.
     Aplica Encapsulamiento: El subtotal se calcula internamente y no se puede modificar directamente
@@ -86,9 +86,9 @@ class Factura:
         self._items = []
         self.total = 0.0
 
-        def agregar_item(self, item: ItemFacutra):
+        def agregar_item(self, item: ItemFactura):
             #Añade un item a la factura y actualiza el total.
-            if not isinstance(item, ItemFacutra):
+            if not isinstance(item, ItemFactura):
                 raise ValueError("El 'item' no es un instacia de la clase ItemFactura.")
             self._items.append(item)
             self._calcular_total() #actualiza el total-.

@@ -1,4 +1,4 @@
-from reportlab.platypus import SimpleDocTemplate, paragraph, Spacer, Table, TableStyle
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
 from reportlab.lib.styles import getSampleStyleSheet
 from reportlab.lib.units import inch
 from reportlab.lib import colors
@@ -6,7 +6,7 @@ from reportlab.lib.pagesizes import letter
 from reportlab.graphics.shapes import Drawing
 from reportlab.graphics.charts.barcharts import VerticalBarChart
 
-from src.Models import Factura, Cliente #Importamos nuestras clases de modelo
+from src.models import Factura, Cliente #Importamos nuestras clases de modelo
 
 class DocumentoPDF:
     """
@@ -24,55 +24,85 @@ class DocumentoPDF:
 
     def _add_header(self):
         #añade un encabezado comun a todos los documentos.
-        self.story.append(paragraph(self.title, self.styles['h1']))
+        self.story.append(Paragraph(self.title, self.styles['h1']))
         self.story.append(Spacer(1, 0.2 * inch))
 
     def _build_content(self):
         """
-        implementacion especifica para la cracion del contenido de una factura.
+        Método abstracto que debe ser implementado por las subclases.
+        Aplica Polimorfismo: Cada subclase implementará este método de forma diferente
+                             para generar su contenido específico.
         """
+        raise NotImplementedError("Este metodo deber ser implementado por las subclases.")
+    
+    def generate(self):
+        #Genera el documento PDF COMPLETO.
+        self._add_header()
+        self._build_content()
+        try:
+            self.doc.build(self.story)
+            print(f"Documento '{self.filename}' generado exitosamente.")
+        except Exception as e:
+            print(f"Error al generar el documento: '{self.filename}': {e}")
 
-        #informacion del cliente
-        self.story.append(paragraph("Datos del Cliente", self.styles['h3']))
-        self.story.append(paragraph(f"nombre: {self.factura.cliente.nombre}", self.styles['Normal']))
-        self.story.append(paragraph(f"Direccion: {self.factura.cliente.direccion}", self.styles['Normal']))
-        self.story.append(paragraph(f"Email: {self.factura.cliente.email}", self.styles['Normal']))
-        self.story.append(Spacer(1, 0.2 * inch))
+class FacturaPDF(DocumentoPDF):
+        """
+        Generador de documentos PDF para facturas.
+        Hereda de DocumentoPDF.
+        Aplica Polimorfismo: Implemento _build_content de forma especifica para facturas.
+        """
+        def __init__(self, filename: str, factura: Factura):
+            super().__init__(filename, f"Factura #{factura.id_factura}")
+            if not isinstance(factura, Factura):
+                raise TypeError("El objeto 'factura' debe ser una instacia de la clase Factura.")
+            self.factura = factura #almacena la factura para generar el PDF
+        
+        def _build_content(self):
+            """
+            Implementacion especifica para la creacion del contenido de una factura.
+            """
+            #informacion del cliente
+            self.story.append(Paragraph("Datos del Cliente", self.styles['h3']))
+            self.story.append(Paragraph(f"nombre: {self.factura.cliente.nombre}", self.styles['Normal']))
+            self.story.append(Paragraph(f"Direccion: {self.factura.cliente.direccion}", self.styles['Normal']))
+            self.story.append(Paragraph(f"Email: {self.factura.cliente.email}", self.styles['Normal']))
+            self.story.append(Spacer(1, 0.2 * inch))
 
-        #detalles de la factura
-        self.story.append(paragraph("Detalle de Items:", self.styles['h3']))
-        data = [['Descripcion', 'Cantidad', 'Precio Unitario', 'Subtotal']]
+            #detalles de la factura
+            self.story.append(Paragraph("Detalle de Items:", self.styles['h3']))
+            data = [['Descripcion', 'Cantidad', 'Precio Unitario', 'Subtotal']]
 
-        for item in self.factura.items:
-            data.append([
-                item.producto.descripcion,
-                str(item.cantidad),
-                f"${item.producto.precio_unitario:.2f}",
-                f"{item.subtotal:.2f}"
+            #detalles de los items
+            for item in self.factura.items:
+                data.append([
+                    item.producto.descripcion,
+                    str(item.cantidad),
+                    f"${item.producto.precio_unitario:.2f}",
+                    f"{item.subtotal:.2f}"
+                ])
+
+            #Fila para el total
+
+            data.append(['', '', 'Total:' f"${self.factura.total:.2f}"])
+
+            table_style = TableStyle([
+                ('BACKGROUND' , (0, 0), (-1, 0), colors.HexColor('F0F0F0')),
+                ('TEXTCOLOR', (0, 0), (-1, 0), colors.black),
+                ('ALING', (0, 0), (-1, -1), 'LEFT'),
+                ('FONTNAME', (0, 0), (-1 ,0), 'Helvetica-Bold'),
+                ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+                ('BACKGROUND', (0, 1), (-1, -2), colors.white),
+                ('GRID', (0, 0), (-1, -1), 1, colors.grey),
+                ('ALIGN', (0, 0), (-1, -1),'RIGHT'), #alinea los numeros a la derecha
+                ('FONTNAME', (2, -1), (-1, -1), 'Helvetica-Bold'), #Total en negrita
+                ('BACKGROUND', (0, -1), (-1, -1), colors.HexColor('E0E0E0')), #fondo para la fila del total
             ])
 
-        #Fila para el total
-
-        data.append(['', '', 'Total:' f"${self.factura.total:.2f}"])
-
-        table_style = TableStyle([
-            ('BACKGROUND' , (0, 0), (-1, 0), colors.HexColor('F0F0F0')),
-            ('TEXTCOLOR', (0, 0), (-1, 0), colors.black),
-            ('ALING', (0, 0), (-1, -1), 'LEFT'),
-            ('FONTNAME', (0, 0), (-1 ,0), 'Helvetica-Bold'),
-            ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
-            ('BACKGROUND', (0, 1), (-1, -2), colors.white),
-            ('GRID', (0, 0) (-1, -1), 1, colors.grey),
-            ('ALIGN', (0, 0), (-1, -1),'RIGHT'), #alinea los numeros a la derecha
-            ('FONTNAME', (2, -1), (-1, -1), 'Helvetica-Bold'), #Total en negrita
-            ('BACKGROUND', (0, -1), (-1, -1), colors.HexColor('E0E0E0')), #fondo para la fila del total
-        ])
-
-        table = Table(data, colWidths=[3*inch, 0.8*inch, 1*inch, 1*inch])
-        table.setStyle(table_style)
-        self.story.append(table)
-        self.story.append(Spacer(1,0.5 * inch))
-        self.story.append(paragraph("Gracias por su compra!", self.styles['Normal']))
+            table = Table(data, colWidths=[3*inch, 0.8*inch, 1*inch, 1*inch])
+            table.setStyle(table_style)
+            self.story.append(table)
+            self.story.append(Spacer(1,0.5 * inch))
+            self.story.append(Paragraph("Gracias por su compra!", self.styles['Normal']))
 
 class InformeVentaPDF(DocumentoPDF):
     """
@@ -86,7 +116,7 @@ class InformeVentaPDF(DocumentoPDF):
         self.data = data #datos para el informe, ej: {'Producto A: 150, 'Producto B': 200} 
 
     def _build_content(self):
-        self.story.append(paragraph("Resumen de Ventas por Producto", self.styles['h3']))
+        self.story.append(Paragraph("Resumen de Ventas por Producto", self.styles['h3']))
         self.story.append(Spacer(1, 0.2 * inch))
 
         #crear tabla de resumen
@@ -128,4 +158,4 @@ class InformeVentaPDF(DocumentoPDF):
         drawing.add(chart)
         self.story.append(drawing)
         self.story.append(Spacer(1, 0.6 * inch))
-        self.story.append(paragraph("Este grafico muestra las venta acumuladas por producto.", self.styles['Italic']))
+        self.story.append(Paragraph("Este grafico muestra las venta acumuladas por producto.", self.styles['Italic']))
