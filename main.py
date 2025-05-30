@@ -1,4 +1,7 @@
+# main.py
+
 from src.models import Cliente, Producto, ItemFactura, Factura
+# CORREGIDO: Asegúrate que InformeVentaPDF es InformeVentasPDF si así se llama en documents.py
 from src.documents import FacturaPDF, InformeVentaPDF
 import os
 from datetime import datetime
@@ -9,7 +12,9 @@ def crear_datos_ejemplo():
     """
     print("DEBUG: Creando datos de ejemplo...")
     cliente1 = Cliente("C001", "Juan Cruz", "Calle falsa 123, Claypole", "juano@gmail.com")
-    cliente2 = Cliente("C002", "Leandro Herrera", "Avenida Siempre Viva 456","Alejandro Korn", "Leandro@gmail.com")
+    # CORREGIDO: La clase Cliente solo acepta 4 argumentos (id, nombre, direccion, email).
+    # Se eliminó el argumento extra "Alejandro Korn".
+    cliente2 = Cliente("C002", "Leandro Herrera", "Avenida Siempre Viva 456", "Leandro@gmail.com")
 
     producto1 = Producto("P001", "Iphone 14 Pro", 700.00)
     producto2 = Producto("P002", "Samsung Galaxy S23", 650.00)
@@ -31,14 +36,15 @@ def crear_datos_ejemplo():
     print(factura2) #Para ver la representación de la factura en consola
     print("-" * 30)
 
-    #datos para el informe de ventas
-
+    # Datos para el informe de ventas
+    # CORREGIDO: Se usan los precios unitarios de los objetos Producto para los datos de ventas,
+    # para asegurar consistencia con los datos de los productos.
     datos_ventas ={
-        producto1.descripcion: 1200.00 * 5, #5 unidades vendidas
-        producto2.descripcion: 650.00 * 3, #3 unidades vendidas
-        producto3.descripcion: 300.00 * 10, #10 unidades vendidas
-        producto4.descripcion: 400.00 * 2, #2 unidades vendidas
-        producto5.descripcion: 1250.00 * 1 #1 unidad vendida
+        producto1.descripcion: producto1.precio_unitario * 5, # 5 unidades vendidas
+        producto2.descripcion: producto2.precio_unitario * 3, # 3 unidades vendidas
+        producto3.descripcion: producto3.precio_unitario * 10, # 10 unidades vendidas
+        producto4.descripcion: producto4.precio_unitario * 2, # 2 unidades vendidas
+        producto5.descripcion: producto5.precio_unitario * 1 # 1 unidad vendida
     }
 
     print("DEBUG: Datos de ejemplo creados.")
@@ -46,7 +52,7 @@ def crear_datos_ejemplo():
 
 def main():
     print("DEBUG: Iniciando función main()...")
-    #Asegurarse de que la carpeta de salida exista
+    # Asegurarse de que la carpeta de salida exista
     output_dir = "generated_pdfs"
     print(f"DEBUG: Intentando crear directorio: {os.path.abspath(output_dir)}")
     os.makedirs(output_dir, exist_ok = True)
@@ -58,29 +64,33 @@ def main():
     
     print("\nIniciando generación de PDFs...")
 
-    #Generar Factura 1
+    # Generar Factura 1
     print("DEBUG: Generando Factura 1...")
     pdf_factura1 = FacturaPDF(os.path.join(output_dir, "factura_F001.pdf"), factura1)
     pdf_factura1.generate()
     print("DEBUG: Factura 1 generada (o intento de).")
 
-    #Generar Factura 2
+    # Generar Factura 2
     print("DEBUG: Generando Factura 2...")
     pdf_factura2 = FacturaPDF(os.path.join(output_dir, "factura_F002.pdf"), factura2)
     pdf_factura2.generate()
     print("DEBUG: Factura 2 generada (o intento de).")
 
-    #Generar informe de ventas
+    # Generar informe de ventas
     print("DEBUG: Generando Informe de Ventas...")
-    pdf_informe_ventas = InformeVentaPDF(os.path.join(output_dir, "informe_ventas.pdf"), datos_ventas)
+    pdf_informe_ventas = InformeVentasPDF(os.path.join(output_dir, "informe_ventas.pdf"), datos_ventas)
     pdf_informe_ventas.generate()
     print("DEBUG: Informe de Ventas generado (o intento de).")
     
     print(f"\nTodos los PDFs generados en la carpeta: {os.path.abspath(output_dir)}")
     print("DEBUG: Función main() finalizada.")
 
-    if __name__ == "__main__":
-        print("DEBUG: Dentro del bloque __main__.")
-        main()
+# Este es tu print de prueba final que siempre aparece
+print("¡Hola! Si ves esto, la terminal y Python funcionan.")
 
+# CORREGIDO: El bloque if __name__ == "__main__": debe estar al nivel superior (sin indentación),
+# fuera de cualquier función.
+if __name__ == "__main__":
+    print("DEBUG: Dentro del bloque __main__.")
+    main()
 

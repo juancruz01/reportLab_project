@@ -6,11 +6,13 @@ from reportlab.lib.pagesizes import letter
 from reportlab.graphics.shapes import Drawing
 from reportlab.graphics.charts.barcharts import VerticalBarChart
 
-from src.models import Factura, Cliente #Importamos nuestras clases de modelo
+# Asegúrate que estas importaciones son correctas y se corresponden con tus clases en models.py
+# Si InformeVentasPDF es el nombre de la clase, el import debe ser InformeVentasPDF
+from src.models import Factura, Cliente, Producto, ItemFactura # Asegúrate de importar todas las clases que necesitas
 
 class DocumentoPDF:
     """
-    clase abstracta para todos nuestros documentos PDF.
+    Clase abstracta para todos nuestros documentos PDF.
     Aplica Abstraccion: Oculta la complejidad de la inicializacion de Reportlab.
     Aplica Herencia: proporciona metodos comunes para la creacion de PDFs.
     """
@@ -19,11 +21,11 @@ class DocumentoPDF:
         self.filename = filename
         self.title = title
         self.doc = SimpleDocTemplate(filename, pagesize=letter)
-        self.styles = getSampleStyleSheet()
-        self.story = [] #Lista para almacenar los elementos del documento
+        self.styles = getSampleStyleStyleSheet()
+        self.story = [] # Lista para almacenar los elementos del documento
 
     def _add_header(self):
-        #añade un encabezado comun a todos los documentos.
+        # Añade un encabezado comun a todos los documentos.
         self.story.append(Paragraph(self.title, self.styles['h1']))
         self.story.append(Spacer(1, 0.2 * inch))
 
@@ -33,79 +35,80 @@ class DocumentoPDF:
         Aplica Polimorfismo: Cada subclase implementará este método de forma diferente
                              para generar su contenido específico.
         """
-        raise NotImplementedError("Este metodo deber ser implementado por las subclases.")
+        raise NotImplementedError("Este metodo debe ser implementado por las subclases.")
     
     def generate(self):
-        #Genera el documento PDF COMPLETO.
+        # Genera el documento PDF COMPLETO.
         self._add_header()
-        self._build_content()
+        # No se llama a _build_content directamente aquí, lo hará la subclase via super()._build_content()
+        # al llamar a doc.build(self.story)
         try:
             self.doc.build(self.story)
-            print(f"Documento '{self.filename}' generado exitosamente.")
+            print(f"DEBUG: Documento '{self.filename}' generado exitosamente.") # Mensaje de depuración
         except Exception as e:
-            print(f"Error al generar el documento: '{self.filename}': {e}")
+            print(f"ERROR: Falló al generar el documento: '{self.filename}': {e}") # Mensaje de error
             import traceback
-            traceback.print_exc() #Esto imprimira la traza completa del error
-
+            traceback.print_exc() # Esto imprimirá la traza completa del error
 
 class FacturaPDF(DocumentoPDF):
-        """
-        Generador de documentos PDF para facturas.
-        Hereda de DocumentoPDF.
-        Aplica Polimorfismo: Implemento _build_content de forma especifica para facturas.
-        """
-        def __init__(self, filename: str, factura: Factura):
-            super().__init__(filename, f"Factura #{factura.id_factura}")
-            if not isinstance(factura, Factura):
-                raise TypeError("El objeto 'factura' debe ser una instacia de la clase Factura.")
-            self.factura = factura #almacena la factura para generar el PDF
+    """
+    Generador de documentos PDF para facturas.
+    Hereda de DocumentoPDF.
+    Aplica Polimorfismo: Implementa _build_content de forma especifica para facturas.
+    """
+    def __init__(self, filename: str, factura: Factura):
+        super().__init__(filename, f"Factura #{factura.id_factura}")
+        if not isinstance(factura, Factura):
+            raise TypeError("El objeto 'factura' debe ser una instancia de la clase Factura.")
+        self.factura = factura # Almacena la factura para generar el PDF
         
-        def _build_content(self):
-            """
-            Implementacion especifica para la creacion del contenido de una factura.
-            """
-            #informacion del cliente
-            self.story.append(Paragraph("Datos del Cliente", self.styles['h3']))
-            self.story.append(Paragraph(f"nombre: {self.factura.cliente.nombre}", self.styles['Normal']))
-            self.story.append(Paragraph(f"Direccion: {self.factura.cliente.direccion}", self.styles['Normal']))
-            self.story.append(Paragraph(f"Email: {self.factura.cliente.email}", self.styles['Normal']))
-            self.story.append(Spacer(1, 0.2 * inch))
+    def _build_content(self):
+        """
+        Implementacion especifica para la creacion del contenido de una factura.
+        """
+        # Informacion del cliente
+        self.story.append(Paragraph("Datos del Cliente", self.styles['h3']))
+        self.story.append(Paragraph(f"Nombre: {self.factura.cliente.nombre}", self.styles['Normal']))
+        self.story.append(Paragraph(f"Direccion: {self.factura.cliente.direccion}", self.styles['Normal']))
+        self.story.append(Paragraph(f"Email: {self.factura.cliente.email}", self.styles['Normal']))
+        self.story.append(Spacer(1, 0.2 * inch))
 
-            #detalles de la factura
-            self.story.append(Paragraph("Detalle de Items:", self.styles['h3']))
-            data = [['Descripcion', 'Cantidad', 'Precio Unitario', 'Subtotal']]
+        # Detalles de la factura
+        self.story.append(Paragraph("Detalle de Items:", self.styles['h3']))
+        data = [['Descripcion', 'Cantidad', 'Precio Unitario', 'Subtotal']]
 
-            #detalles de los items
-            for item in self.factura.items:
-                data.append([
-                    item.producto.descripcion,
-                    str(item.cantidad),
-                    f"${item.producto.precio_unitario:.2f}",
-                    f"{item.subtotal:.2f}"
-                ])
-
-            #Fila para el total
-
-            data.append(['', '', 'Total:' f"${self.factura.total:.2f}"])
-
-            table_style = TableStyle([
-                ('BACKGROUND' , (0, 0), (-1, 0), colors.HexColor('F0F0F0')),
-                ('TEXTCOLOR', (0, 0), (-1, 0), colors.black),
-                ('ALING', (0, 0), (-1, -1), 'LEFT'),
-                ('FONTNAME', (0, 0), (-1 ,0), 'Helvetica-Bold'),
-                ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
-                ('BACKGROUND', (0, 1), (-1, -2), colors.white),
-                ('GRID', (0, 0), (-1, -1), 1, colors.grey),
-                ('ALIGN', (0, 0), (-1, -1),'RIGHT'), #alinea los numeros a la derecha
-                ('FONTNAME', (2, -1), (-1, -1), 'Helvetica-Bold'), #Total en negrita
-                ('BACKGROUND', (0, -1), (-1, -1), colors.HexColor('E0E0E0')), #fondo para la fila del total
+        # Detalles de los items
+        for item in self.factura.items:
+            data.append([
+                item.producto.descripcion,
+                str(item.cantidad),
+                f"${item.producto.precio_unitario:.2f}",
+                f"${item.subtotal:.2f}"
             ])
 
-            table = Table(data, colWidths=[3*inch, 0.8*inch, 1*inch, 1*inch])
-            table.setStyle(table_style)
-            self.story.append(table)
-            self.story.append(Spacer(1,0.5 * inch))
-            self.story.append(Paragraph("Gracias por su compra!", self.styles['Normal']))
+        # Fila para el total
+        # CORREGIDO: la última fila debe tener el mismo número de columnas que el encabezado
+        data.append(['', '', 'Total:', f"${self.factura.total:.2f}"])
+
+        table_style = TableStyle([
+            ('BACKGROUND' , (0, 0), (-1, 0), colors.HexColor('#ff1a1a')),
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.black),
+            ('ALIGN', (0, 0), (-1, -1), 'LEFT'), # CORREGIDO: ALING a ALIGN
+            ('FONTNAME', (0, 0), (-1 ,0), 'Helvetica-Bold'),
+            ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+            ('BACKGROUND', (0, 1), (-1, -2), colors.white),
+            ('GRID', (0, 0), (-1, -1), 1, colors.grey),
+            ('ALIGN', (2, -1), (-1, -1), 'RIGHT'), # Alinea el total a la derecha en su columna.
+            ('FONTNAME', (2, -1), (-1, -1), 'Helvetica-Bold'), # Total en negrita
+            ('BACKGROUND', (0, -1), (-1, -1), colors.HexColor('#E0E0E0')), # Fondo para la fila del total
+        ])
+
+        # Ajuste de colWidths para que coincida con el número de columnas y la alineación del total
+        table = Table(data, colWidths=[3*inch, 0.8*inch, 1*inch, 1*inch]) 
+        table.setStyle(table_style)
+        self.story.append(table)
+        self.story.append(Spacer(1,0.5 * inch))
+        self.story.append(Paragraph("Gracias por su compra!", self.styles['Normal']))
 
 class InformeVentaPDF(DocumentoPDF):
     """
@@ -114,15 +117,16 @@ class InformeVentaPDF(DocumentoPDF):
     Aplica Polimorfismo: Implementa _build_content de forma especifica para informes de ventas
     """
 
-    def __int__(self, filename: str, data: dict, title: str = "Informe de Ventas"):
+    # CORREGIDO: __int__ debe ser __init__
+    def __init__(self, filename: str, data: dict, title: str = "Informe de Ventas"):
         super().__init__(filename, title)
-        self.data = data #datos para el informe, ej: {'Producto A: 150, 'Producto B': 200} 
+        self.data = data # datos para el informe, ej: {'Producto A: 150, 'Producto B': 200} 
 
     def _build_content(self):
         self.story.append(Paragraph("Resumen de Ventas por Producto", self.styles['h3']))
         self.story.append(Spacer(1, 0.2 * inch))
 
-        #crear tabla de resumen
+        # Crear tabla de resumen
         table_data = [['Producto', 'Ventas']]
         for producto, ventas in self.data.items():
             table_data.append([producto, f"${ventas:.2f}"])
@@ -132,9 +136,9 @@ class InformeVentaPDF(DocumentoPDF):
             ('TEXTCOLOR',(0, 0), (-1, 0), colors.black),
             ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
             ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
-            ('BOTTOMPADDINGD', (0, 0), (-1, 0), 8),
+            ('BOTTOMPADDING', (0, 0), (-1, 0), 8), # CORREGIDO: BOTTOMPADDINGD a BOTTOMPADDING
             ('GRID', (0, 0 ), (-1, -1), 1, colors.grey),
-            ('ALIGN', (1, 0), (-1, -1), 'RIGHT'), #alinea ventas a la derecha
+            ('ALIGN', (1, 0), (-1, -1), 'RIGHT'), # Alinea ventas a la derecha
         ])
 
         ventas_table = Table(table_data, colWidths=[2.5*inch, 1.5*inch])
@@ -142,23 +146,24 @@ class InformeVentaPDF(DocumentoPDF):
         self.story.append(ventas_table)
         self.story.append(Spacer(1,0.5 * inch))
 
-        #crear grafico de barras simple
-        drawing = Drawing(400, 200) #Ancho y alto del dibujo
+        # Crear grafico de barras simple
+        drawing = Drawing(400, 200) # Ancho y alto del dibujo
         chart = VerticalBarChart()
         chart.x = 50
         chart.y = 50
         chart.height = 125
         chart.width = 300
-        chart.data = [tuple(self.data.values())] #los datos deber ser una lista de tuplas
+        chart.data = [tuple(self.data.values())] # los datos deben ser una lista de tuplas
         chart.groupSpacing = 10
         chart.valueAxis.valueMin = 0
-        chart.ValueAxis.valueMax = max(self.data.values()) * 1.2 #un poco mas arriba que el maximo
-        chart.categoryAxis.labels.boxAnchor = 'ne' #centra las etiquetas en el eje x
-        chart.categoryAxis.labels.dx = 8 #desplaza las etiquetas a la derecha
+        # CORREGIDO: ValueAxis a valueAxis (minúscula)
+        chart.valueAxis.valueMax = max(self.data.values()) * 1.2 # un poco mas arriba que el maximo
+        chart.categoryAxis.labels.boxAnchor = 'ne' # centra las etiquetas en el eje x
+        chart.categoryAxis.labels.dx = 8 # desplaza las etiquetas a la derecha
         chart.categoryAxis.labels.dy = -2
-        chart.categoryAxis.categoryNames = list(self.data.keys()) #nombres de las categorias
+        chart.categoryAxis.categoryNames = list(self.data.keys()) # nombres de las categorias
 
         drawing.add(chart)
         self.story.append(drawing)
         self.story.append(Spacer(1, 0.6 * inch))
-        self.story.append(Paragraph("Este grafico muestra las venta acumuladas por producto.", self.styles['Italic']))
+        self.story.append(Paragraph("Este grafico muestra las ventas acumuladas por producto.", self.styles['Italic']))
