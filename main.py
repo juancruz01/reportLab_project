@@ -78,7 +78,7 @@ def main():
 
     # Generar informe de ventas
     print("DEBUG: Generando Informe de Ventas...")
-    pdf_informe_ventas = InformeVentasPDF(os.path.join(output_dir, "informe_ventas.pdf"), datos_ventas)
+    pdf_informe_ventas = InformeVentaPDF(os.path.join(output_dir, "informe_ventas.pdf"), datos_ventas)
     pdf_informe_ventas.generate()
     print("DEBUG: Informe de Ventas generado (o intento de).")
     

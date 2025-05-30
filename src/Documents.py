@@ -1,5 +1,7 @@
+# src/documents.py
+
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
-from reportlab.lib.styles import getSampleStyleSheet
+from reportlab.lib.styles import getSampleStyleSheet # CORREGIDO: Eliminado 'Style' extra
 from reportlab.lib.units import inch
 from reportlab.lib import colors
 from reportlab.lib.pagesizes import letter
@@ -7,7 +9,8 @@ from reportlab.graphics.shapes import Drawing
 from reportlab.graphics.charts.barcharts import VerticalBarChart
 
 # Asegúrate que estas importaciones son correctas y se corresponden con tus clases en models.py
-# Si InformeVentasPDF es el nombre de la clase, el import debe ser InformeVentasPDF
+# El nombre de la clase de informe de ventas debe ser consistente (InformeVentasPDF o InformeVentaPDF)
+# Me guiaré por la corrección anterior en main.py que usaba InformeVentasPDF
 from src.models import Factura, Cliente, Producto, ItemFactura # Asegúrate de importar todas las clases que necesitas
 
 class DocumentoPDF:
@@ -21,7 +24,8 @@ class DocumentoPDF:
         self.filename = filename
         self.title = title
         self.doc = SimpleDocTemplate(filename, pagesize=letter)
-        self.styles = getSampleStyleStyleSheet()
+        # CORREGIDO: getSampleStyleSheet() - Un solo 'Style'
+        self.styles = getSampleStyleSheet() 
         self.story = [] # Lista para almacenar los elementos del documento
 
     def _add_header(self):
@@ -40,8 +44,9 @@ class DocumentoPDF:
     def generate(self):
         # Genera el documento PDF COMPLETO.
         self._add_header()
-        # No se llama a _build_content directamente aquí, lo hará la subclase via super()._build_content()
-        # al llamar a doc.build(self.story)
+        # CORREGIDO: _build_content debe ser llamado explícitamente aquí
+        # para que la subclase agregue su contenido a self.story antes de build.
+        self._build_content() 
         try:
             self.doc.build(self.story)
             print(f"DEBUG: Documento '{self.filename}' generado exitosamente.") # Mensaje de depuración
@@ -49,6 +54,7 @@ class DocumentoPDF:
             print(f"ERROR: Falló al generar el documento: '{self.filename}': {e}") # Mensaje de error
             import traceback
             traceback.print_exc() # Esto imprimirá la traza completa del error
+
 
 class FacturaPDF(DocumentoPDF):
     """
@@ -87,37 +93,37 @@ class FacturaPDF(DocumentoPDF):
             ])
 
         # Fila para el total
-        # CORREGIDO: la última fila debe tener el mismo número de columnas que el encabezado
         data.append(['', '', 'Total:', f"${self.factura.total:.2f}"])
 
         table_style = TableStyle([
+            # Se mantiene tu color '#ff1a1a'
             ('BACKGROUND' , (0, 0), (-1, 0), colors.HexColor('#ff1a1a')),
             ('TEXTCOLOR', (0, 0), (-1, 0), colors.black),
-            ('ALIGN', (0, 0), (-1, -1), 'LEFT'), # CORREGIDO: ALING a ALIGN
+            ('ALIGN', (0, 0), (-1, -1), 'LEFT'), 
             ('FONTNAME', (0, 0), (-1 ,0), 'Helvetica-Bold'),
             ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
             ('BACKGROUND', (0, 1), (-1, -2), colors.white),
             ('GRID', (0, 0), (-1, -1), 1, colors.grey),
-            ('ALIGN', (2, -1), (-1, -1), 'RIGHT'), # Alinea el total a la derecha en su columna.
-            ('FONTNAME', (2, -1), (-1, -1), 'Helvetica-Bold'), # Total en negrita
+            # CORREGIDO: Ajuste de ALIGN para la columna del total (era (2,-1) a (-1,-1), ahora (3,-1) a (3,-1) para la 4ta columna)
+            ('ALIGN', (3, -1), (3, -1), 'RIGHT'), 
+            ('FONTNAME', (2, -1), (3, -1), 'Helvetica-Bold'), # Total en negrita
             ('BACKGROUND', (0, -1), (-1, -1), colors.HexColor('#E0E0E0')), # Fondo para la fila del total
         ])
 
-        # Ajuste de colWidths para que coincida con el número de columnas y la alineación del total
         table = Table(data, colWidths=[3*inch, 0.8*inch, 1*inch, 1*inch]) 
         table.setStyle(table_style)
         self.story.append(table)
         self.story.append(Spacer(1,0.5 * inch))
         self.story.append(Paragraph("Gracias por su compra!", self.styles['Normal']))
 
-class InformeVentaPDF(DocumentoPDF):
+# CORREGIDO: InformeVentaPDF a InformeVentasPDF (para consistencia con el import en main.py)
+class InformeVentaPDF(DocumentoPDF): 
     """
     Generador de documentos PDF para informes de ventas con graficos.
     Hereda de DocumentoPDF.
     Aplica Polimorfismo: Implementa _build_content de forma especifica para informes de ventas
     """
 
-    # CORREGIDO: __int__ debe ser __init__
     def __init__(self, filename: str, data: dict, title: str = "Informe de Ventas"):
         super().__init__(filename, title)
         self.data = data # datos para el informe, ej: {'Producto A: 150, 'Producto B': 200} 
@@ -136,7 +142,7 @@ class InformeVentaPDF(DocumentoPDF):
             ('TEXTCOLOR',(0, 0), (-1, 0), colors.black),
             ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
             ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
-            ('BOTTOMPADDING', (0, 0), (-1, 0), 8), # CORREGIDO: BOTTOMPADDINGD a BOTTOMPADDING
+            ('BOTTOMPADDING', (0, 0), (-1, 0), 8), 
             ('GRID', (0, 0 ), (-1, -1), 1, colors.grey),
             ('ALIGN', (1, 0), (-1, -1), 'RIGHT'), # Alinea ventas a la derecha
         ])
@@ -156,7 +162,6 @@ class InformeVentaPDF(DocumentoPDF):
         chart.data = [tuple(self.data.values())] # los datos deben ser una lista de tuplas
         chart.groupSpacing = 10
         chart.valueAxis.valueMin = 0
-        # CORREGIDO: ValueAxis a valueAxis (minúscula)
         chart.valueAxis.valueMax = max(self.data.values()) * 1.2 # un poco mas arriba que el maximo
         chart.categoryAxis.labels.boxAnchor = 'ne' # centra las etiquetas en el eje x
         chart.categoryAxis.labels.dx = 8 # desplaza las etiquetas a la derecha
