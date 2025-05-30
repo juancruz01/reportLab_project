@@ -44,6 +44,9 @@ class DocumentoPDF:
             print(f"Documento '{self.filename}' generado exitosamente.")
         except Exception as e:
             print(f"Error al generar el documento: '{self.filename}': {e}")
+            import traceback
+            traceback.print_exc() #Esto imprimira la traza completa del error
+
 
 class FacturaPDF(DocumentoPDF):
         """

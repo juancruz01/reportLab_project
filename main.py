@@ -59,18 +59,28 @@ def main():
     print("\nIniciando generación de PDFs...")
 
     #Generar Factura 1
+    print("DEBUG: Generando Factura 1...")
     pdf_factura1 = FacturaPDF(os.path.join(output_dir, "factura_F001.pdf"), factura1)
-    pdf_factura1.build()
+    pdf_factura1.generate()
+    print("DEBUG: Factura 1 generada (o intento de).")
 
     #Generar Factura 2
+    print("DEBUG: Generando Factura 2...")
     pdf_factura2 = FacturaPDF(os.path.join(output_dir, "factura_F002.pdf"), factura2)
-    pdf_factura2.build()
+    pdf_factura2.generate()
+    print("DEBUG: Factura 2 generada (o intento de).")
 
     #Generar informe de ventas
+    print("DEBUG: Generando Informe de Ventas...")
     pdf_informe_ventas = InformeVentaPDF(os.path.join(output_dir, "informe_ventas.pdf"), datos_ventas)
-    pdf_informe_ventas.generate_pdf()
-
-    print(f"\nTodos los PDFs generados en la carpeta: {output_dir}")
+    pdf_informe_ventas.generate()
+    print("DEBUG: Informe de Ventas generado (o intento de).")
+    
+    print(f"\nTodos los PDFs generados en la carpeta: {os.path.abspath(output_dir)}")
+    print("DEBUG: Función main() finalizada.")
 
     if __name__ == "__main__":
+        print("DEBUG: Dentro del bloque __main__.")
         main()
+
+
