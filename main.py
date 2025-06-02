@@ -16,6 +16,8 @@ def crear_datos_ejemplo():
     # Se eliminó el argumento extra "Alejandro Korn".
     cliente2 = Cliente("C002", "Leandro Herrera", "Avenida Siempre Viva 456", "Leandro@gmail.com")
 
+    cliente3 = Cliente("C003", "Facundo Sena", "Calle re lejos 666", "elfacupa@gmail.com")
+
     producto1 = Producto("P001", "Iphone 14 Pro", 700.00)
     producto2 = Producto("P002", "Samsung Galaxy S23", 650.00)
     producto3 = Producto("P003", "Xiaomi Redmi Note 12", 300.00)    
@@ -36,6 +38,13 @@ def crear_datos_ejemplo():
     print(factura2) #Para ver la representación de la factura en consola
     print("-" * 30)
 
+     # --- Crear Factura 3 ---
+    factura3 = Factura("F003", cliente3, datetime.now().strftime("%Y-%m-%d"))
+    factura3.agregar_item(ItemFactura(producto1, 3))
+    factura3.agregar_item(ItemFactura(producto4, 1))
+    print(factura3) #Para ver la representación de la factura en consola
+    print("-" * 30)
+
     # Datos para el informe de ventas
     # CORREGIDO: Se usan los precios unitarios de los objetos Producto para los datos de ventas,
     # para asegurar consistencia con los datos de los productos.
@@ -48,7 +57,7 @@ def crear_datos_ejemplo():
     }
 
     print("DEBUG: Datos de ejemplo creados.")
-    return factura1, factura2, datos_ventas
+    return factura1, factura2, factura3,  datos_ventas
 
 def main():
     print("DEBUG: Iniciando función main()...")
@@ -60,7 +69,7 @@ def main():
 
     print("Generando datos de ejemplo...")
 
-    factura1, factura2, datos_ventas = crear_datos_ejemplo()
+    factura1, factura2, factura3, datos_ventas = crear_datos_ejemplo()
     
     print("\nIniciando generación de PDFs...")
 
@@ -75,6 +84,12 @@ def main():
     pdf_factura2 = FacturaPDF(os.path.join(output_dir, "factura_F002.pdf"), factura2)
     pdf_factura2.generate()
     print("DEBUG: Factura 2 generada (o intento de).")
+
+      # Generar Factura 3
+    print("DEBUG: Generando Factura 3...")
+    pdf_factura3 = FacturaPDF(os.path.join(output_dir, "factura_F003.pdf"), factura3)
+    pdf_factura3.generate() 
+    print("DEBUG: Factura 3 generada (o intento de).")
 
     # Generar informe de ventas
     print("DEBUG: Generando Informe de Ventas...")
