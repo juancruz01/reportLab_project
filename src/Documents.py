@@ -8,10 +8,7 @@ from reportlab.lib.pagesizes import letter
 from reportlab.graphics.shapes import Drawing
 from reportlab.graphics.charts.barcharts import VerticalBarChart
 
-# Asegúrate que estas importaciones son correctas y se corresponden con tus clases en models.py
-# El nombre de la clase de informe de ventas debe ser consistente (InformeVentasPDF o InformeVentaPDF)
-# Me guiaré por la corrección anterior en main.py que usaba InformeVentasPDF
-from src.models import Factura, Cliente, Producto, ItemFactura # Asegúrate de importar todas las clases que necesitas
+from src.models import Factura, Cliente, Producto, ItemFactura 
 
 class DocumentoPDF:
     """
@@ -44,7 +41,7 @@ class DocumentoPDF:
     def generate(self):
         # Genera el documento PDF COMPLETO.
         self._add_header()
-        # CORREGIDO: _build_content debe ser llamado explícitamente aquí
+
         # para que la subclase agregue su contenido a self.story antes de build.
         self._build_content() 
         try:
