@@ -87,9 +87,9 @@ class Factura:
         
         self.id_factura = id_factura
         self.cliente = cliente
-        self.fecha = fecha # CORREGIDO: Era 'fehca', ahora 'fecha'
+        self.fecha = fecha 
         self._items = []
-        self._total = 0.0 # CORREGIDO: Inicializar _total, no total directamente
+        self._total = 0.0 
 
     # CORREGIDO: Estos métodos deben estar a nivel de CLASE, no dentro de __init__
     def agregar_item(self, item: ItemFactura):
@@ -113,7 +113,6 @@ class Factura:
     
     def __str__(self):
         items_str = "\n".join(str(item) for item in self._items)
-        # CORREGIDO: Usar self.fecha, no self.fehca
         return (f"Factura ID:{self.id_factura}\n"
                 f"Cliente: {self.cliente.nombre}\n"
                 f"Fecha: {self.fecha}\n" 

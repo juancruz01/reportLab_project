@@ -85,8 +85,10 @@ class FacturaPDF(DocumentoPDF):
             data.append([
                 item.producto.descripcion,
                 str(item.cantidad),
-                f"${item.producto.precio_unitario:.2f}",
-                f"${item.subtotal:.2f}"
+                f"${float(item.producto.precio_unitario):,.2f}",#CORREGIDO antes era f"${item.producto.precio_unitario:.2f}",
+                                                                #Aplica formato en el código de datos antes de pasarlos a la tabla
+
+                f"${float(item.subtotal):,.2f}" #CORREGIDO antes era f"${item.subtotal:.2f}"
             ])
 
         # Fila para el total
@@ -96,7 +98,7 @@ class FacturaPDF(DocumentoPDF):
             # Se mantiene tu color '#ff1a1a'
             ('BACKGROUND' , (0, 0), (-1, 0), colors.HexColor('#ff1a1a')),
             ('TEXTCOLOR', (0, 0), (-1, 0), colors.black),
-            ('ALIGN', (0, 0), (-1, -1), 'LEFT'), 
+            ('ALIGN', (2, 1), (-1, -1), 'RIGHT'), 
             ('FONTNAME', (0, 0), (-1 ,0), 'Helvetica-Bold'),
             ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
             ('BACKGROUND', (0, 1), (-1, -2), colors.white),
@@ -107,13 +109,13 @@ class FacturaPDF(DocumentoPDF):
             ('BACKGROUND', (0, -1), (-1, -1), colors.HexColor('#E0E0E0')), # Fondo para la fila del total
         ])
 
-        table = Table(data, colWidths=[3*inch, 0.8*inch, 1*inch, 1*inch]) 
+        table = Table(data, colWidths=[3.5*inch, 1*inch, 1.2*inch, 1.2*inch]) 
         table.setStyle(table_style)
         self.story.append(table)
         self.story.append(Spacer(1,0.5 * inch))
         self.story.append(Paragraph("Gracias por su compra!", self.styles['Normal']))
 
-# CORREGIDO: InformeVentaPDF a InformeVentasPDF (para consistencia con el import en main.py)
+
 class InformeVentaPDF(DocumentoPDF): 
     """
     Generador de documentos PDF para informes de ventas con graficos.
@@ -141,7 +143,7 @@ class InformeVentaPDF(DocumentoPDF):
             ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
             ('BOTTOMPADDING', (0, 0), (-1, 0), 8), 
             ('GRID', (0, 0 ), (-1, -1), 1, colors.grey),
-            ('ALIGN', (1, 0), (-1, -1), 'RIGHT'), # Alinea ventas a la derecha
+            ('ALIGN', (1, 1), (-1, -1), 'RIGHT'), # Alinea ventas a la derecha
         ])
 
         ventas_table = Table(table_data, colWidths=[2.5*inch, 1.5*inch])
@@ -150,22 +152,33 @@ class InformeVentaPDF(DocumentoPDF):
         self.story.append(Spacer(1,0.5 * inch))
 
         # Crear grafico de barras simple
-        drawing = Drawing(400, 200) # Ancho y alto del dibujo
+        drawing = Drawing(450, 220)  #Aumenta tamaño del área de dibujo
         chart = VerticalBarChart()
-        chart.x = 50
-        chart.y = 50
-        chart.height = 125
-        chart.width = 300
-        chart.data = [tuple(self.data.values())] # los datos deben ser una lista de tuplas
+
+        #CORRECCION del grafico para que no se superpongan los nombres entre si
+        chart.x = 30 #CORREGIDO antes era chart.x = 50
+        chart.y = 40 #CORREGIDO antes era chart.y = 50
+        chart.height = 150 #CORREGIDO antes era chart.height = 125
+        chart.width = 350 #COREGIDO antes era chart.width = 300
+
+        ventas_numericas = [float(valor) for valor in self.data.values()] #Asegurar que los datos sean valores numéricos correctamente formateados
+        chart.data = [tuple(ventas_numericas)] #Los datos deben ser una lista de tuplas
+        
         chart.groupSpacing = 10
         chart.valueAxis.valueMin = 0
-        chart.valueAxis.valueMax = max(self.data.values()) * 1.2 # un poco mas arriba que el maximo
-        chart.categoryAxis.labels.boxAnchor = 'ne' # centra las etiquetas en el eje x
-        chart.categoryAxis.labels.dx = 8 # desplaza las etiquetas a la derecha
-        chart.categoryAxis.labels.dy = -2
-        chart.categoryAxis.categoryNames = list(self.data.keys()) # nombres de las categorias
+        chart.valueAxis.valueMax = max(ventas_numericas) * 1.3 #CORREGIDO antes era chart.valueAxis.valueMax = max(self.data.values()) * 1.2
+            
+            # Ajustes de etiquetas en el eje X
+        chart.categoryAxis.labels.boxAnchor = 'ne'
+        chart.categoryAxis.labels.dx = 12 #Desplaza las etiquetas a la derecha
+                                          #CORREGIDO antes era chart.categoryAxis.labels.dx = 8 
+        chart.categoryAxis.labels.dy = -5 #CORREGIDO antes era chart.categoryAxis.labels.dy = -2
+        chart.categoryAxis.labels.angle = 45 #AGREGADO: Evita superposición
+        
+        chart.categoryAxis.categoryNames = list(self.data.keys())
 
         drawing.add(chart)
         self.story.append(drawing)
+        
         self.story.append(Spacer(1, 0.6 * inch))
         self.story.append(Paragraph("Este grafico muestra las ventas acumuladas por producto.", self.styles['Italic']))
