@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Crear Nueva Factura</title>
+</head>
+<body>
+    <h1>Crear Nueva Factura</h1>
+    <form method="post" action="{% url 'crear_factura' %}">
+        {% csrf_token %}
+        <div>
+            <label for="id_cliente">Seleccionar Cliente:</label>
+            <select name="cliente" id="id_cliente">
+                {% for cliente in clientes %}
+                    <option value="{{ cliente.id }}">{{ cliente.nombre }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <hr>
+        
+        <div>
+            <h2>Items de la Factura</h2>
+            <div id="items-container">
+                <p>Haz clic para agregar productos.</p>
+            </div>
+            
+            <button type="button" onclick="addItem()">Agregar Producto</button>
+        </div>
+
+        <button type="submit">Generar Factura</button>
+    </form>
+
+    <script>
+        // Lógica con JavaScript para agregar items dinámicamente
+        function addItem() {
+            var itemsContainer = document.getElementById('items-container');
+            var newItemDiv = document.createElement('div');
+            
+            // Asumo que tienes una lista de productos en el contexto
+            var productos = [
+                {% for producto in productos %}
+                    { id: '{{ producto.id }}', descripcion: '{{ producto.descripcion }}', precio: '{{ producto.precio_unitario }}' },
+                {% endfor %}
+            ];
+            
+            var selectHTML = '<select name="producto_id">';
+            productos.forEach(function(producto) {
+                selectHTML += `<option value="${producto.id}">${producto.descripcion} ($${producto.precio})</option>`;
+            });
+            selectHTML += '</select>';
+
+            newItemDiv.innerHTML = `
+                ${selectHTML}
+                <input type="number" name="cantidad" placeholder="Cantidad" min="1" required>
+            `;
+            itemsContainer.appendChild(newItemDiv);
+        }
+    </script>
+</body>
+</html>
