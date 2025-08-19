@@ -1,0 +1,25 @@
+# Ignorar la base de datos de SQLite
+db.sqlite3
+*.sqlite3
+
+# Ignorar archivos generados por ReportLab
+generated_pdfs/
+
+# Ignorar archivos de Python
+__pycache__/
+*.pyc
+*.pyo
+
+# Ignorar el entorno virtual
+venv/
+
+# Ignorar archivos de configuración de desarrollo
+.env
+.vscode/
+
+# Ignorar archivos temporales
+*.log
+.DS_Store
+
+#ignorar el readme
+README.txt
